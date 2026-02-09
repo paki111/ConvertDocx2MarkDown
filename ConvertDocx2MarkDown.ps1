@@ -3,16 +3,15 @@
 Convert DOCX to Markdown with Advanced Image Processing
 
 .DESCRIPTION
-This script converts DOCX files to Markdown format with automatic image extraction,
-EMF to PNG conversion, and unique image prefixes to avoid naming conflicts.
-
-Inspired by: https://github.com/SjoerdV/ConvertOneNote2MarkDown
+This script converts DOCX files to Markdown format with automatic image extraction, EMF to PNG conversion, 
+and unique image prefixes to avoid naming conflicts during multiple documents conversion.
 
 .NOTES
-Author: [Your Name]
+Author: Patryk Pakmur
 License: MIT License
-
-Copyright (c) 2026 [Your Name]
+  
+Copyright (c) 2026 Patryk Pakmur
+https://github.com/paki111/ConvertDocx2MarkDown
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
