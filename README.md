@@ -15,7 +15,7 @@ PowerShell script for converting DOCX documents to Markdown format with advanced
 Converts DOCX files to Markdown with advanced image processing.
 
 **Directories:**
-- Source: `c:\temp\docx` (hardcoded)
+- Source: `c:\temp\docx_markdown` (hardcoded)
 - Destination: `c:\temp\docx_markdown` (hardcoded)
 - Images: `c:\temp\docx_markdown\assets` (hardcoded)
 
@@ -74,4 +74,5 @@ Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process
 Script is available under MIT License. See file header for details.
 
 Inspired by: [ConvertOneNote2MarkDown](https://github.com/SjoerdV/ConvertOneNote2MarkDown) by Sjoerd de Valk
+
 
