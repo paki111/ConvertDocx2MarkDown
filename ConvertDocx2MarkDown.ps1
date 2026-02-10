@@ -51,7 +51,7 @@ Function Remove-InvalidFileNameChars {
 }
 
 # hardcoded paths
-$sourcepath = "c:\temp\docx"
+$sourcepath = "c:\temp\docx_markdown"
 $destpath = "c:\temp\docx_markdown"
 
 # create folders if they don't exist
@@ -224,6 +224,49 @@ foreach ($docxFile in $docxFiles) {
         
         Set-Content -LiteralPath $mdPath -Value $content -NoNewline
         Write-Host "  Fixed image paths" -ForegroundColor Green
+
+        # Add numbering to markdown headings (1., 1.1., 1.1.1. ...)
+        try {
+          $lines = [regex]::Split($content, "\r?\n")
+          $inCodeBlock = $false
+          # counters for levels 1..6
+          $counters = 0,0,0,0,0,0
+
+          for ($i = 0; $i -lt $lines.Count; $i++) {
+            $line = $lines[$i]
+
+            if ($line -match '^\s*```') {
+              $inCodeBlock = -not $inCodeBlock
+              continue
+            }
+
+            if (-not $inCodeBlock -and $line -match '^(#+)\s*(.*)') {
+              $level = $matches[1].Length
+              $text = $matches[2].Trim()
+
+              # remove existing numbering like "1.", "1.1.", "1)" if present
+              $text = $text -replace '^[0-9]+(\.[0-9]+)*[\.)]?\s*', ''
+
+              # increment this level counter and reset deeper levels
+              $counters[$level - 1] = $counters[$level - 1] + 1
+              for ($k = $level; $k -lt $counters.Count; $k++) { $counters[$k] = 0 }
+
+              # build prefix (only include up to current level)
+              $parts = @()
+              for ($k = 0; $k -lt $level; $k++) { $parts += $counters[$k] }
+              $numberPrefix = ($parts -join '.') + '. '
+
+              $lines[$i] = "$($matches[1]) $numberPrefix$text"
+            }
+          }
+
+          $numbered = $lines -join "`r`n"
+          Set-Content -LiteralPath $mdPath -Value $numbered -NoNewline
+          Write-Host "  Added numbering to headings" -ForegroundColor Green
+        }
+        catch {
+          Write-Host "  Warning: Could not add numbering to headings: $($_.Exception.Message)" -ForegroundColor Yellow
+        }
       }
       
       $convertedCount++

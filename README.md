@@ -28,6 +28,8 @@ Converts DOCX files to Markdown with advanced image processing.
 - Relative image paths (`assets/...`)
 - Tables in Markdown format instead of HTML
 
+- Automatic numbering of headings: after conversion the script adds hierarchical numbering to Markdown headings (1., 1.1., 1.1.1...) based on the document's heading structure.
+
 **Usage:**
 ```powershell
 # 1. Place DOCX files in source directory

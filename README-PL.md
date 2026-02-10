@@ -15,7 +15,7 @@ Skrypt PowerShell do konwersji dokumentów DOCX do formatu Markdown z zaawansowa
 Konwertuje pliki DOCX do Markdown z zaawansowanym przetwarzaniem obrazów.
 
 **Katalogi:**
-- Źródłowy: `c:\temp\docx` (zakodowany na stałe)
+- Źródłowy: `c:\temp\docx_markdown` (zakodowany na stałe)
 - Docelowy: `c:\temp\docx_markdown` (zakodowany na stałe)
 - Obrazy: `c:\temp\docx_markdown\assets` (zakodowany na stałe)
 
@@ -28,10 +28,12 @@ Konwertuje pliki DOCX do Markdown z zaawansowanym przetwarzaniem obrazów.
 - Względne ścieżki do obrazów (`assets/...`)
 - Tabele w formacie Markdown zamiast HTML
 
+- Automatyczna numeracja nagłówków: po konwersji skrypt dodaje hierarchiczną numerację nagłówków w Markdown (1., 1.1., 1.1.1...) na podstawie struktury nagłówków dokumentu.
+
 **Użycie:**
 ```powershell
 # 1. Umieść pliki DOCX w katalogu źródłowym
-Copy-Item *.docx c:\temp\docx\
+Copy-Item *.docx c:\temp\docx_markdown\
 
 # 2. Uruchom skrypt
 .\ConvertDocx2MarkDown.ps1
