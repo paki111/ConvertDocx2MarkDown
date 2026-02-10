@@ -24,7 +24,7 @@ Converts DOCX files to Markdown with advanced image processing.
 - Image extraction to `/assets` directory
 - Automatic EMF → PNG conversion
 - Unique image prefixes (first 12 characters of document name)
-- Polish characters removed from prefixes
+- Non-ASCII characters removed from prefixes
 - Relative image paths (`assets/...`)
 - Tables in Markdown format instead of HTML
 
@@ -51,7 +51,7 @@ Copy-Item *.docx c:\temp\docx\
 - DOCX script automatically creates directories if they don't exist
 - EMF images are automatically converted to PNG for better compatibility
 - Complex tables with merged cells are converted to markdown (without rowspan/colspan)
-- Polish characters in file names are replaced with ASCII in image prefixes
+- Non-ASCII characters in file names are transliterated to ASCII in image filename prefixes
 - Scripts support long paths and OneDrive files
 
 ## Troubleshooting
@@ -74,3 +74,4 @@ Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process
 Script is available under MIT License. See file header for details.
 
 Inspired by: [ConvertOneNote2MarkDown](https://github.com/SjoerdV/ConvertOneNote2MarkDown) by Sjoerd de Valk
+
