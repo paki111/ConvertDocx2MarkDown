@@ -20,13 +20,15 @@ Konwertuje pliki DOCX do Markdown z zaawansowanym przetwarzaniem obrazów.
 - Obrazy: `c:\temp\docx_markdown\assets` (zakodowany na stałe)
 
 **Funkcje:**
-- Konwersja DOCX → Markdown (GFM z pipe tables)
+- Konwersja DOCX → Markdown (GFM z pipe tables + raw HTML dla złożonych tabel)
+- Automatyczny post-processing: konwersja tabel HTML w Markdown do pipe tables tam, gdzie to możliwe
 - Ekstrakcja obrazów do katalogu `/assets`
 - Automatyczna konwersja EMF → PNG
 - Unikalne prefiksy obrazów (pierwsze 12 znaków nazwy dokumentu)
 - Usuwanie polskich znaków z prefiksów
 - Względne ścieżki do obrazów (`assets/...`)
-- Tabele w formacie Markdown zamiast HTML
+- Proste tabele w formacie Markdown; złożone tabele zachowane jako HTML
+- Konwersja tabel do Markdown działa w trybie best-effort (nieobsługiwane struktury mogą zostać uproszczone)
 
 - Automatyczna numeracja nagłówków: po konwersji skrypt dodaje hierarchiczną numerację nagłówków w Markdown (1., 1.1., 1.1.1...) na podstawie struktury nagłówków dokumentu.
 
@@ -50,7 +52,7 @@ Copy-Item *.docx c:\temp\docx_markdown\
 
 - Skrypt DOCX automatycznie tworzy katalogi jeśli nie istnieją
 - Obrazy EMF są automatycznie konwertowane na PNG dla lepszej kompatybilności
-- Złożone tabele z merged cells są konwertowane na markdown (bez rowspan/colspan)
+- Złożone tabele ze scalonymi komórkami są zachowywane jako tabele HTML dla lepszego odwzorowania
 - Polskie znaki w nazwach plików są zastępowane ASCII w prefiksach obrazów
 - Skrypty obsługują długie ścieżki i pliki na OneDrive
 

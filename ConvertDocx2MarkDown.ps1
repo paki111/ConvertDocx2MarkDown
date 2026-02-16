@@ -50,9 +50,95 @@ Function Remove-InvalidFileNameChars {
   return ($newName.Replace(" ", "_"))
 }
 
+Function Convert-HtmlTablesToPipeTables {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string]$MarkdownContent
+  )
+
+  $tablePattern = '(?is)<table\b[^>]*>.*?</table>'
+
+  return [regex]::Replace($MarkdownContent, $tablePattern, {
+      param($match)
+
+      $tableHtml = $match.Value
+      $rowMatches = [regex]::Matches($tableHtml, '(?is)<tr\b[^>]*>(.*?)</tr>')
+      if ($rowMatches.Count -eq 0) {
+        return $tableHtml
+      }
+
+      $rows = New-Object System.Collections.Generic.List[object]
+      $maxColumns = 0
+
+      foreach ($rowMatch in $rowMatches) {
+        $cells = [regex]::Matches($rowMatch.Groups[1].Value, '(?is)<t[dh]\b([^>]*)>(.*?)</t[dh]>')
+        if ($cells.Count -eq 0) {
+          continue
+        }
+
+        $rowValues = @()
+
+        foreach ($cell in $cells) {
+          $attributes = $cell.Groups[1].Value
+          $cellHtml = $cell.Groups[2].Value
+
+          $text = $cellHtml -replace '(?is)<br\s*/?>', ' '
+          $text = $text -replace '(?is)</p>', ' '
+          $text = $text -replace '(?is)<[^>]+>', ' '
+          $text = [System.Net.WebUtility]::HtmlDecode($text)
+          $text = [regex]::Replace($text, '\s+', ' ').Trim()
+          $text = $text.Replace('|', '\|')
+
+          $colspan = 1
+          if ($attributes -match 'colspan\s*=\s*["'']?(\d+)') {
+            $colspan = [int]$matches[1]
+          }
+
+          $rowValues += $text
+          for ($i = 1; $i -lt $colspan; $i++) {
+            $rowValues += ''
+          }
+        }
+
+        if ($rowValues.Count -gt 0) {
+          $rows.Add($rowValues)
+          if ($rowValues.Count -gt $maxColumns) {
+            $maxColumns = $rowValues.Count
+          }
+        }
+      }
+
+      if ($rows.Count -eq 0 -or $maxColumns -eq 0) {
+        return $tableHtml
+      }
+
+      $normalizedRows = @()
+      foreach ($row in $rows) {
+        $current = @($row)
+        while ($current.Count -lt $maxColumns) {
+          $current += ''
+        }
+        $normalizedRows += , $current
+      }
+
+      $headerRow = $normalizedRows[0]
+      $headerLine = '| ' + ($headerRow -join ' | ') + ' |'
+      $separatorLine = '| ' + ((1..$maxColumns | ForEach-Object { '---' }) -join ' | ') + ' |'
+
+      $markdownLines = @($headerLine, $separatorLine)
+      for ($index = 1; $index -lt $normalizedRows.Count; $index++) {
+        $markdownLines += '| ' + ($normalizedRows[$index] -join ' | ') + ' |'
+      }
+
+      return ($markdownLines -join "`r`n")
+    })
+}
+
 # hardcoded paths
 $sourcepath = "c:\temp\docx_markdown"
 $destpath = "c:\temp\docx_markdown"
+# try to normalize HTML tables to Markdown pipe tables after conversion
+$preferMarkdownTables = $true
 
 # create folders if they don't exist
 if (-not (Test-Path -Path $sourcepath)) {
@@ -116,13 +202,13 @@ foreach ($docxFile in $docxFiles) {
 
     Write-Host "Converting: $($docxFile.Name)" -ForegroundColor Cyan
 
-    # convert docx to markdown with tables in markdown format and extract media
+    # convert docx to markdown and extract media
     # --extract-media extracts images to specified folder
-    # -t gfm+pipe_tables ensures markdown tables instead of HTML
+    # -t gfm+pipe_tables+raw_html keeps simple tables as Markdown and preserves complex ones as HTML
     # --wrap=none prevents line wrapping
     # --markdown-headings=atx uses # style headings
-    # Note: Complex tables with merged cells may still render as HTML
-    & $pandocPath -f docx -t gfm+pipe_tables-raw_html `
+    # Note: Complex tables with merged cells are preserved as HTML tables in Markdown
+    & $pandocPath -f docx -t gfm+pipe_tables+raw_html `
       -i "$($docxFile.FullName)" `
       -o "$mdPath" `
       --wrap=none `
@@ -224,6 +310,41 @@ foreach ($docxFile in $docxFiles) {
         
         Set-Content -LiteralPath $mdPath -Value $content -NoNewline
         Write-Host "  Fixed image paths" -ForegroundColor Green
+
+        # optional second pass: convert HTML tables in markdown to pipe tables where possible
+        if ($preferMarkdownTables) {
+          try {
+            $tempMdPath = "$mdPath.tmp"
+            & $pandocPath -f gfm+raw_html -t gfm+pipe_tables `
+              -i "$mdPath" `
+              -o "$tempMdPath" `
+              --wrap=none `
+              --markdown-headings=atx 2>&1 | Out-Null
+
+            if ($LASTEXITCODE -eq 0 -and (Test-Path -Path $tempMdPath)) {
+              Move-Item -Path $tempMdPath -Destination $mdPath -Force
+              $content = Get-Content -LiteralPath $mdPath -Raw
+              Write-Host "  Converted HTML tables to Markdown where possible" -ForegroundColor Green
+            }
+            elseif (Test-Path -Path $tempMdPath) {
+              Remove-Item -Path $tempMdPath -Force -ErrorAction SilentlyContinue
+              Write-Host "  Warning: Table normalization step failed, keeping original output" -ForegroundColor Yellow
+            }
+          }
+          catch {
+            Write-Host "  Warning: Could not normalize tables to Markdown: $($_.Exception.Message)" -ForegroundColor Yellow
+          }
+
+          # fallback: convert remaining HTML tables to Markdown pipe tables directly
+          if ($content -match '(?is)<table\b') {
+            $convertedTablesContent = Convert-HtmlTablesToPipeTables -MarkdownContent $content
+            if ($convertedTablesContent -ne $content) {
+              $content = $convertedTablesContent
+              Set-Content -LiteralPath $mdPath -Value $content -NoNewline
+              Write-Host "  Converted remaining HTML tables to Markdown (fallback)" -ForegroundColor Green
+            }
+          }
+        }
 
         # Add numbering to markdown headings (1., 1.1., 1.1.1. ...)
         try {

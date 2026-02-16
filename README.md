@@ -20,13 +20,15 @@ Converts DOCX files to Markdown with advanced image processing.
 - Images: `c:\temp\docx_markdown\assets` (hardcoded)
 
 **Features:**
-- DOCX → Markdown conversion (GFM with pipe tables)
+- DOCX → Markdown conversion (GFM with pipe tables + raw HTML for complex tables)
+- Automatic post-processing: HTML tables in Markdown are converted to pipe tables where possible
 - Image extraction to `/assets` directory
 - Automatic EMF → PNG conversion
 - Unique image prefixes (first 12 characters of document name)
 - Non-ASCII characters removed from prefixes
 - Relative image paths (`assets/...`)
-- Tables in Markdown format instead of HTML
+- Simple tables in Markdown format; complex tables preserved as HTML
+- Best-effort normalization to Markdown tables (unsupported structures may remain simplified)
 
 - Automatic numbering of headings: after conversion the script adds hierarchical numbering to Markdown headings (1., 1.1., 1.1.1...) based on the document's heading structure.
 
@@ -50,7 +52,7 @@ Copy-Item *.docx c:\temp\docx\
 
 - DOCX script automatically creates directories if they don't exist
 - EMF images are automatically converted to PNG for better compatibility
-- Complex tables with merged cells are converted to markdown (without rowspan/colspan)
+- Complex tables with merged cells are preserved as HTML tables for better fidelity
 - Non-ASCII characters in file names are transliterated to ASCII in image filename prefixes
 - Scripts support long paths and OneDrive files
 
